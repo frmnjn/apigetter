@@ -1,6 +1,8 @@
 package com.example.apigetter.config;
 
 import com.mongodb.MongoClientURI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.mongo.MongoProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +14,8 @@ import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 @Configuration
 public class MultipleMongoConfig {
+
+    private static Logger log = LoggerFactory.getLogger(MultipleMongoConfig.class);
 
     @Primary
     @Bean(name = "configTemplate")
@@ -41,7 +45,8 @@ public class MultipleMongoConfig {
     @Primary
     public MongoDbFactory configFactory(final MongoProperties mongo) throws Exception {
         MongoClientURI uri = new MongoClientURI(mongo.getUri());
-        //return new SimpleMongoDbFactory(new MongoClient(mongo.getHost(), mongo.getPort()),mongo.getDatabase());
+        log.info("anjay " + uri.getDatabase());
+//        return new SimpleMongoDbFactory(new MongoClient(mongo.getHost(), mongo.getPort()),mongo.getDatabase());
         return new SimpleMongoDbFactory(uri);
     }
 

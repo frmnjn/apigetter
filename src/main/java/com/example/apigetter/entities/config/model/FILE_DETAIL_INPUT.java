@@ -63,6 +63,7 @@ public class FILE_DETAIL_INPUT implements Serializable {
     private String worker;
     private String insertHourlyCountInputReport;
     private String missingTrunkQuery;
+    private String token;
 
     public FILE_DETAIL_INPUT() {
         super();
@@ -72,7 +73,7 @@ public class FILE_DETAIL_INPUT implements Serializable {
                              int protocolType, String ip, String username, String password, int port, List<String> remotePath,
                              String localPath, String processType, String processPath, String pattern, String cron, String createdBy,
                              Date createdDate, String modifiedBy, Date modifiedDate, boolean active, boolean collecting, boolean writeToFile, String logOption,
-                             String defaultFieldValue, String specialCondition) {
+                             String defaultFieldValue, String specialCondition, String token) {
         this.id = id;
         this.fileId = fileId;
         this.fileIdName = fileIdName;
@@ -100,6 +101,7 @@ public class FILE_DETAIL_INPUT implements Serializable {
         this.logOption = logOption;
         this.defaultFieldValue = defaultFieldValue;
         this.specialCondition = specialCondition;
+        this.token = token;
     }
 
     public String getInsertHourlyCountInputReport() {
@@ -516,6 +518,14 @@ public class FILE_DETAIL_INPUT implements Serializable {
 
     public void setMissingTrunkQuery(String missingTrunkQuery) {
         this.missingTrunkQuery = missingTrunkQuery;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     @Override
