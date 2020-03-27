@@ -45,7 +45,6 @@ public class MultipleMongoConfig {
     @Primary
     public MongoDbFactory configFactory(final MongoProperties mongo) throws Exception {
         MongoClientURI uri = new MongoClientURI(mongo.getUri());
-        log.info("anjay " + uri.getDatabase());
 //        return new SimpleMongoDbFactory(new MongoClient(mongo.getHost(), mongo.getPort()),mongo.getDatabase());
         return new SimpleMongoDbFactory(uri);
     }

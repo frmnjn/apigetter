@@ -64,6 +64,8 @@ public class FILE_DETAIL_INPUT implements Serializable {
     private String insertHourlyCountInputReport;
     private String missingTrunkQuery;
     private String token;
+    private String rdbms;
+    private String database;
 
     public FILE_DETAIL_INPUT() {
         super();
@@ -73,7 +75,7 @@ public class FILE_DETAIL_INPUT implements Serializable {
                              int protocolType, String ip, String username, String password, int port, List<String> remotePath,
                              String localPath, String processType, String processPath, String pattern, String cron, String createdBy,
                              Date createdDate, String modifiedBy, Date modifiedDate, boolean active, boolean collecting, boolean writeToFile, String logOption,
-                             String defaultFieldValue, String specialCondition, String token) {
+                             String defaultFieldValue, String specialCondition, String token, String rdbms, String database) {
         this.id = id;
         this.fileId = fileId;
         this.fileIdName = fileIdName;
@@ -102,6 +104,8 @@ public class FILE_DETAIL_INPUT implements Serializable {
         this.defaultFieldValue = defaultFieldValue;
         this.specialCondition = specialCondition;
         this.token = token;
+        this.rdbms = rdbms;
+        this.database = database;
     }
 
     public String getInsertHourlyCountInputReport() {
@@ -526,6 +530,22 @@ public class FILE_DETAIL_INPUT implements Serializable {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public String getRdbms() {
+        return rdbms;
+    }
+
+    public void setRdbms(String rdbms) {
+        this.rdbms = rdbms;
+    }
+
+    public String getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(String database) {
+        this.database = database;
     }
 
     @Override
