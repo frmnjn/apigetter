@@ -102,41 +102,28 @@ public class GetController {
 
     @GetMapping("/force_rdbms")
     public List get_rdbms() {
+        //ambil config dari FILE_DETAIL_INPUT
         FILE_DETAIL_INPUT config = fileDetailInputRepository.findByFileId("API02");
         log.info("Fetched Config : " + config.toString());
         List json = new ArrayList();
 
         try {
+            //CONNECT
             connect(config);
 
-            //collect data from rdbms
+            //COLLECT DATA FROM RDBMS
             Statement stmt = this.conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT * from test");
 
-            //urutan bener tapi harus dimasukkin ke sebuah object dulu
             while (rs.next()) {
                 CollectedRdbms collectedRdbms = new CollectedRdbms(rs.getInt("id"), rs.getString("data1"), rs.getString("data2"));
                 json.add(collectedRdbms);
             }
             saveToJson(json, config.getFileId(), config.getFileIdName());
-
-            //urutan nya kolomnya ngaco
-//            JSONArray asd = new JSONArray();
-//            ResultSetMetaData rsmd = rs.getMetaData();
-//            while(rs.next()) {
-//                int numColumns = rsmd.getColumnCount();
-//                JSONObject obj = new JSONObject();
-//                for (int i=1; i<=numColumns; i++) {
-//                    String column_name = rsmd.getColumnName(i);
-//                    obj.put(column_name, rs.getObject(column_name));
-//                }
-//                asd.add(obj);
-//            }
-//            saveToJson(asd,config.getFileId(),config.getFileIdName());
-
         } catch (Exception e) {
             log.error(e.toString());
         } finally {
+            //TUTUP KONEKSI
             close();
 
             //create and insert object into file_queue
