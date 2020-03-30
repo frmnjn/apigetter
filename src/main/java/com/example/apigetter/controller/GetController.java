@@ -7,7 +7,9 @@ import com.example.apigetter.entities.config.model.FILE_DETAIL_INPUT;
 import com.example.apigetter.entities.config.repository.FileDetailInputRepository;
 import com.example.apigetter.entities.report.model.FILE_QUEUE;
 import com.example.apigetter.entities.report.repository.FileQueueRepository;
+import com.example.apigetter.entities.response.ResponseJson;
 import com.google.gson.Gson;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +25,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -101,64 +102,27 @@ public class GetController {
     }
 
     @GetMapping("/force_rdbms")
-    public List get_rdbms() {
-        //ambil config dari FILE_DETAIL_INPUT
-        FILE_DETAIL_INPUT config = fileDetailInputRepository.findByFileId("API02");
+    public ResponseJson get_rdbms() {
+        FILE_DETAIL_INPUT config = fileDetailInputRepository.findByFileId("RDBMS01");
         log.info("Fetched Config : " + config.toString());
-        List json = new ArrayList();
-
-        try {
-            //CONNECT
-            connect(config);
-
-            //COLLECT DATA FROM RDBMS
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * from test");
-
-            while (rs.next()) {
-                CollectedRdbms collectedRdbms = new CollectedRdbms(rs.getInt("id"), rs.getString("data1"), rs.getString("data2"));
-                json.add(collectedRdbms);
-            }
-            saveToJson(json, config.getFileId(), config.getFileIdName());
-        } catch (Exception e) {
-            log.error(e.toString());
-        } finally {
-            //TUTUP KONEKSI
-            close();
-
-            //create and insert object into file_queue
-            FILE_QUEUE fq = new FILE_QUEUE();
-            fq.setFilenameInput(config.getFileIdName());
-            fq.setFileId(config.getFileId());
-            fq.setStep("COLLECTED");
-            fileQueueRepository.save(fq);
-            log.info("Inserted data to FILE_QUEUE : " + fq.toString());
-        }
-        return json;
-    }
-
-    @PostMapping("/force_rdbms")
-    public List post_rdbms() {
-        FILE_DETAIL_INPUT config = fileDetailInputRepository.findByFileId("API02");
-        log.info("Fetched Config : " + config.toString());
-        List json = new ArrayList();
+        JSONArray jsonArray = new JSONArray();
+        String path = null;
 
         try {
             connect(config);
 
             //collect data from rdbms
             Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * from test");
+            ResultSet rs = stmt.executeQuery("SELECT * from actor");
 
-            //urutan bener tapi harus dimasukkin ke sebuah object dulu
+//            //urutan bener tapi harus dimasukkin ke sebuah object dulu / ditaro hashmap
             while (rs.next()) {
-                CollectedRdbms collectedRdbms = new CollectedRdbms(rs.getInt("id"), rs.getString("data1"), rs.getString("data2"));
-                json.add(collectedRdbms);
+                CollectedRdbms collectedRdbms = new CollectedRdbms(rs.getLong("actor_id"), rs.getString("first_name"), rs.getString("last_name"), rs.getTimestamp("last_update"));
+                jsonArray.add(collectedRdbms);
             }
-            saveToJson(json, config.getFileId(), config.getFileIdName());
+            path = saveToJson(jsonArray, config.getFileId(), config.getFileIdName());
 
-            //urutan nya kolomnya ngaco
-//            JSONArray asd = new JSONArray();
+//            urutan nya kolomnya ngaco
 //            ResultSetMetaData rsmd = rs.getMetaData();
 //            while(rs.next()) {
 //                int numColumns = rsmd.getColumnCount();
@@ -167,9 +131,9 @@ public class GetController {
 //                    String column_name = rsmd.getColumnName(i);
 //                    obj.put(column_name, rs.getObject(column_name));
 //                }
-//                asd.add(obj);
+//                jsonArray.add(obj);
 //            }
-//            saveToJson(asd,config.getFileId(),config.getFileIdName());
+//            path = saveToJson(jsonArray,config.getFileId(),config.getFileIdName());
 
         } catch (Exception e) {
             log.error(e.toString());
@@ -184,7 +148,75 @@ public class GetController {
             fileQueueRepository.save(fq);
             log.info("Inserted data to FILE_QUEUE : " + fq.toString());
         }
-        return json;
+
+        ResponseJson responseJson = new ResponseJson();
+        if (jsonArray.size() != 0) {
+            responseJson.setSuccess(true);
+        } else {
+            responseJson.setSuccess(false);
+        }
+        responseJson.setData(jsonArray);
+
+        return responseJson;
+    }
+
+    @PostMapping("/force_rdbms")
+    public ResponseJson post_rdbms() {
+        FILE_DETAIL_INPUT config = fileDetailInputRepository.findByFileId("RDBMS01");
+        log.info("Fetched Config : " + config.toString());
+        JSONArray jsonArray = new JSONArray();
+        String path = null;
+
+        try {
+            connect(config);
+
+            //collect data from rdbms
+            Statement stmt = this.conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * from actor");
+
+//            //urutan bener tapi harus dimasukkin ke sebuah object dulu / ditaro hashmap
+            while (rs.next()) {
+                CollectedRdbms collectedRdbms = new CollectedRdbms(rs.getLong("actor_id"), rs.getString("first_name"), rs.getString("last_name"), rs.getTimestamp("last_update"));
+                jsonArray.add(collectedRdbms);
+            }
+            path = saveToJson(jsonArray, config.getFileId(), config.getFileIdName());
+
+//            urutan nya kolomnya ngaco
+//            ResultSetMetaData rsmd = rs.getMetaData();
+//            while(rs.next()) {
+//                int numColumns = rsmd.getColumnCount();
+//                JSONObject obj = new JSONObject();
+//                for (int i=1; i<=numColumns; i++) {
+//                    String column_name = rsmd.getColumnName(i);
+//                    obj.put(column_name, rs.getObject(column_name));
+//                }
+//                jsonArray.add(obj);
+//            }
+//            path = saveToJson(jsonArray,config.getFileId(),config.getFileIdName());
+
+        } catch (Exception e) {
+            log.error(e.toString());
+        } finally {
+            close();
+
+            //create and insert object into file_queue
+            FILE_QUEUE fq = new FILE_QUEUE();
+            fq.setFilenameInput(config.getFileIdName());
+            fq.setFileId(config.getFileId());
+            fq.setStep("COLLECTED");
+            fileQueueRepository.save(fq);
+            log.info("Inserted data to FILE_QUEUE : " + fq.toString());
+        }
+
+        ResponseJson responseJson = new ResponseJson();
+        if (jsonArray.size() != 0) {
+            responseJson.setSuccess(true);
+        } else {
+            responseJson.setSuccess(false);
+        }
+        responseJson.setData(jsonArray);
+
+        return responseJson;
     }
 
     private HttpHeaders createHttpHeaders(String token) {
@@ -194,11 +226,17 @@ public class GetController {
         return headers;
     }
 
-    private void saveToJson(Object body, String FileId, String FileIdName) {
+    private String saveToJson(Object body, String FileId, String FileIdName) {
         Gson gson = new Gson();
         PrintWriter printWriter = null;
         String json = gson.toJson(body);
-        String pathToSave = env.getProperty("localPath");
+        String pathToSave = null;
+        if (CommonHelper.isLinuxsOs()) {
+            pathToSave = env.getProperty("linuxPath");
+        } else if (CommonHelper.isWindowsOs()) {
+            pathToSave = env.getProperty("winPath");
+        }
+
         String fullPath = pathToSave + FileId + "_" + FileIdName + "_" + CommonHelper.convertDateToString("yyyyMMddHHmmss", new Date()) + ".json";
         try {
             printWriter = new PrintWriter(new File(fullPath));
@@ -211,13 +249,19 @@ public class GetController {
             }
         }
         log.info("Collected as json file at " + fullPath);
+        return fullPath;
     }
 
-    private void saveToJson(List body, String FileId, String FileIdName) {
+    private String saveToJson(List body, String FileId, String FileIdName) {
         Gson gson = new Gson();
         PrintWriter printWriter = null;
         String json = gson.toJson(body);
-        String pathToSave = env.getProperty("localPath");
+        String pathToSave = null;
+        if (CommonHelper.isLinuxsOs()) {
+            pathToSave = env.getProperty("linuxPath");
+        } else if (CommonHelper.isWindowsOs()) {
+            pathToSave = env.getProperty("winPath");
+        }
         String fullPath = pathToSave + FileId + "_" + FileIdName + "_" + CommonHelper.convertDateToString("yyyyMMddHHmmss", new Date()) + ".json";
         try {
             printWriter = new PrintWriter(new File(fullPath));
@@ -230,6 +274,7 @@ public class GetController {
             }
         }
         log.info("Collected as json file at " + fullPath);
+        return fullPath;
     }
 
     private Connection connect(FILE_DETAIL_INPUT config) {

@@ -7,6 +7,8 @@ import java.util.Date;
 
 public class CommonHelper {
 
+    private static String OS = System.getProperty("os.name").toLowerCase();
+
     public static String convertDateToString(String format, Date date) {
         DateFormat df = new SimpleDateFormat(format);
         return df.format(date);
@@ -30,4 +32,23 @@ public class CommonHelper {
             return null;
         }
     }
+
+    public static String usedOS() {
+        return System.getProperty("os.name").toLowerCase();
+    }
+
+    public static boolean isWindowsOs() {
+
+        return (OS.contains("win"));
+    }
+
+    public static boolean isLinuxsOs() {
+        return (OS.contains("nix") || OS.contains("nux") || OS.contains("aix"));
+    }
+
+    public static boolean isMacOs() {
+        return (OS.contains("mac"));
+    }
+
+
 }

@@ -1,51 +1,55 @@
 package com.example.apigetter.entities.collected;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.sql.Timestamp;
 
 public class CollectedRdbms {
-    int id;
-    String data1;
-    String data2;
 
-    public CollectedRdbms(int id, String data1, String data2) {
-        this.id = id;
-        this.data1 = data1;
-        this.data2 = data2;
+    private Long actor_id;
+    private String first_name;
+    private String last_name;
+    private Timestamp last_update;
+
+    public CollectedRdbms() {
     }
 
-    public int getId() {
-        return id;
+    public CollectedRdbms(Long actor_id, String first_name, String last_name, Timestamp last_update) {
+        this.actor_id = actor_id;
+        this.first_name = first_name;
+        this.last_name = last_name;
+        this.last_update = last_update;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public Long getactor_id() {
+        return actor_id;
     }
 
-    public String getData1() {
-        return data1;
+    public void setactor_id(Long actor_id) {
+        this.actor_id = actor_id;
     }
 
-    public void setData1(String data1) {
-        this.data1 = data1;
+    public String getfirst_name() {
+        return first_name;
     }
 
-    public String getData2() {
-        return data2;
+    public void setfirst_name(String first_name) {
+        this.first_name = first_name;
     }
 
-    public void setData2(String data2) {
-        this.data2 = data2;
+    public String getlast_name() {
+        return last_name;
     }
 
-    @Override
-    public String toString() {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.writeValueAsString(this);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return getClass().getName() + "#" + id;
-        }
+    public void setlast_name(String last_name) {
+        this.last_name = last_name;
     }
+
+    public Timestamp getlast_update() {
+        return last_update;
+    }
+
+    public void setlast_update(Timestamp last_update) {
+        this.last_update = last_update;
+    }
+
 
 }
