@@ -1,5 +1,11 @@
 package com.example.apigetter.common;
 
+import oracle.sql.DATE;
+import oracle.sql.TIMESTAMP;
+import oracle.sql.TIMESTAMPLTZ;
+import oracle.sql.TIMESTAMPTZ;
+
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -50,5 +56,17 @@ public class CommonHelper {
         return (OS.contains("mac"));
     }
 
-
+    public static Object convertTimestamp(Object result) throws SQLException {
+        if (result instanceof TIMESTAMP) {
+            return new Date(((TIMESTAMP) result).dateValue().getTime());
+        } else if (result instanceof DATE) {
+            return new Date(((DATE) result).dateValue().getTime());
+        } else if (result instanceof TIMESTAMPLTZ) {
+            return new Date(((TIMESTAMPLTZ) result).dateValue().getTime());
+        } else if (result instanceof TIMESTAMPTZ) {
+            return new Date(((TIMESTAMPTZ) result).dateValue().getTime());
+        } else {
+            return result;
+        }
+    }
 }

@@ -1,0 +1,9 @@
+mvn install:install-file -Dfile=C:\Users\firma\Downloads\ojdbc6.jar -DgroupId=com.example.apigetter -DartifactId=ojdbc -Dversion=6.0 -Dpackaging=jar
+
+<dependency>
+            <groupId>com.example.apigetter</groupId>
+            <artifactId>odjbc</artifactId>
+            <version>6.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/ojdbc6.jar</systemPath>
+        </dependency>

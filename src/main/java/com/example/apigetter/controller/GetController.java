@@ -2,7 +2,6 @@ package com.example.apigetter.controller;
 
 import com.example.apigetter.common.CommonHelper;
 import com.example.apigetter.entities.collected.Collected;
-import com.example.apigetter.entities.collected.CollectedRdbms;
 import com.example.apigetter.entities.config.model.FILE_DETAIL_INPUT;
 import com.example.apigetter.entities.config.repository.FileDetailInputRepository;
 import com.example.apigetter.entities.report.model.FILE_QUEUE;
@@ -103,7 +102,7 @@ public class GetController {
 
     @GetMapping("/force_rdbms")
     public ResponseJson get_rdbms() {
-        FILE_DETAIL_INPUT config = fileDetailInputRepository.findByFileId("RDBMS01");
+        FILE_DETAIL_INPUT config = fileDetailInputRepository.findByFileId("RDBMS04");
         log.info("Fetched Config : " + config.toString());
         JSONArray jsonArray = new JSONArray();
         String path = null;
@@ -113,86 +112,34 @@ public class GetController {
 
             //collect data from rdbms
             Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * from actor");
+            ResultSet rs = null;
+            if (config.getRdbms().contains("oracle")) {
+//                rs = stmt.executeQuery("SELECT ACTOR_ID,FIRST_NAME,LAST_NAME FROM TEST.ACTOR");
+                rs = stmt.executeQuery("SELECT * FROM TEST.ACTOR");
+            } else {
+                rs = stmt.executeQuery("SELECT * from actor");
+            }
 
 //            //urutan bener tapi harus dimasukkin ke sebuah object dulu / ditaro hashmap
-            while (rs.next()) {
-                CollectedRdbms collectedRdbms = new CollectedRdbms(rs.getLong("actor_id"), rs.getString("first_name"), rs.getString("last_name"), rs.getTimestamp("last_update"));
-                jsonArray.add(collectedRdbms);
-            }
-            path = saveToJson(jsonArray, config.getFileId(), config.getFileIdName());
+//            while (rs.next()) {
+//                CollectedRdbms collectedRdbms = new CollectedRdbms(rs.getLong("actor_id"), rs.getString("first_name"), rs.getString("last_name"), rs.getTimestamp("last_update"));
+//                jsonArray.add(collectedRdbms);
+//            }
+//            path = saveToJson(jsonArray, config.getFileId(), config.getFileIdName());
 
 //            urutan nya kolomnya ngaco
-//            ResultSetMetaData rsmd = rs.getMetaData();
-//            while(rs.next()) {
-//                int numColumns = rsmd.getColumnCount();
-//                JSONObject obj = new JSONObject();
-//                for (int i=1; i<=numColumns; i++) {
-//                    String column_name = rsmd.getColumnName(i);
-//                    obj.put(column_name, rs.getObject(column_name));
-//                }
-//                jsonArray.add(obj);
-//            }
-//            path = saveToJson(jsonArray,config.getFileId(),config.getFileIdName());
-
-        } catch (Exception e) {
-            log.error(e.toString());
-        } finally {
-            close();
-
-            //create and insert object into file_queue
-            FILE_QUEUE fq = new FILE_QUEUE();
-            fq.setFilenameInput(config.getFileIdName());
-            fq.setFileId(config.getFileId());
-            fq.setStep("COLLECTED");
-            fileQueueRepository.save(fq);
-            log.info("Inserted data to FILE_QUEUE : " + fq.toString());
-        }
-
-        ResponseJson responseJson = new ResponseJson();
-        if (jsonArray.size() != 0) {
-            responseJson.setSuccess(true);
-        } else {
-            responseJson.setSuccess(false);
-        }
-        responseJson.setData(jsonArray);
-
-        return responseJson;
-    }
-
-    @PostMapping("/force_rdbms")
-    public ResponseJson post_rdbms() {
-        FILE_DETAIL_INPUT config = fileDetailInputRepository.findByFileId("RDBMS01");
-        log.info("Fetched Config : " + config.toString());
-        JSONArray jsonArray = new JSONArray();
-        String path = null;
-
-        try {
-            connect(config);
-
-            //collect data from rdbms
-            Statement stmt = this.conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * from actor");
-
-//            //urutan bener tapi harus dimasukkin ke sebuah object dulu / ditaro hashmap
+            ResultSetMetaData rsmd = rs.getMetaData();
             while (rs.next()) {
-                CollectedRdbms collectedRdbms = new CollectedRdbms(rs.getLong("actor_id"), rs.getString("first_name"), rs.getString("last_name"), rs.getTimestamp("last_update"));
-                jsonArray.add(collectedRdbms);
+                int numColumns = rsmd.getColumnCount();
+                JSONObject obj = new JSONObject();
+                for (int i = 1; i <= numColumns; i++) {
+                    String column_name = rsmd.getColumnName(i);
+                    Object object = CommonHelper.convertTimestamp(rs.getObject(column_name));
+                    obj.put(column_name, object);
+                }
+                jsonArray.add(obj);
             }
             path = saveToJson(jsonArray, config.getFileId(), config.getFileIdName());
-
-//            urutan nya kolomnya ngaco
-//            ResultSetMetaData rsmd = rs.getMetaData();
-//            while(rs.next()) {
-//                int numColumns = rsmd.getColumnCount();
-//                JSONObject obj = new JSONObject();
-//                for (int i=1; i<=numColumns; i++) {
-//                    String column_name = rsmd.getColumnName(i);
-//                    obj.put(column_name, rs.getObject(column_name));
-//                }
-//                jsonArray.add(obj);
-//            }
-//            path = saveToJson(jsonArray,config.getFileId(),config.getFileIdName());
 
         } catch (Exception e) {
             log.error(e.toString());
@@ -278,8 +225,19 @@ public class GetController {
     }
 
     private Connection connect(FILE_DETAIL_INPUT config) {
+        String url = null;
         try {
-            String url = String.format("jdbc:%s://%s:%d/%s", config.getRdbms(), config.getIp(), config.getPort(), config.getDatabase());
+            if (config.getRdbms().contains("postgresql")) {
+                url = String.format("jdbc:%s://%s:%d/%s", config.getRdbms(), config.getIp(), config.getPort(), config.getDatabase());
+            } else if (config.getRdbms().contains("mysql")) {
+                url = String.format("jdbc:%s://%s:%d/%s", config.getRdbms(), config.getIp(), config.getPort(), config.getDatabase());
+            } else if (config.getRdbms().contains("sqlserver")) {
+                url = String.format("jdbc:%s://%s:%d;databaseName=%s", config.getRdbms(), config.getIp(), config.getPort(), config.getDatabase());
+            } else if (config.getRdbms().contains("oracle")) {
+//                jdbc:oracle:thin:@//spring.guru.csi0i9rgj9ws.us-east-1.rds.amazonaws.com:1521/ORCL
+                url = String.format("jdbc:%s:thin:@//%s:%d/%s", config.getRdbms(), config.getIp(), config.getPort(), config.getDatabase());
+            }
+
             Properties props = new Properties();
             props.setProperty("user", config.getUsername());
             props.setProperty("password", config.getPassword());
@@ -297,11 +255,8 @@ public class GetController {
         try {
             if (conn != null && !conn.isClosed()) {
                 String url = conn.getMetaData().getURL();
-                log.info("Closing Connection to " + url);
+                log.info("Closed Connection to " + url);
                 conn.close();
-                if (conn.isClosed()) {
-                    log.info(url + " Closed... ");
-                }
             }
         } catch (SQLException e) {
             log.error(e.toString());
